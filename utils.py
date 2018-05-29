@@ -6,8 +6,6 @@ from textblob.sentiments import NaiveBayesAnalyzer
 
 import time
 
-MIN_PARAGRAPH_WORD_LENGTH = 15
-
 def analyze_text(corpus):
     blob = TextBlob(corpus)
     polarity = blob.sentiment.polarity #-1 to 1, 1 being positive
@@ -22,14 +20,14 @@ def process_page(html):
     return page_corpus
 
 
-def process_element(element): #return text from a <p> tag meeting criteria to inclusion into corpus
+def process_element(element, options): #return text from a <p> tag meeting criteria to inclusion into corpus
     if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]', 'a'] or isinstance(element, Comment):
         return "" #filter out txt from hidden elements or comments
     if element.parent.name in ['p', 'div']:
         txt = alphanum(element.strip())
         if len(txt) > 0:
             words = TextBlob(txt).words
-            if len(words) >= MIN_PARAGRAPH_WORD_LENGTH and not "©" in words:
+            if len(words) >= options['MIN_PARAGRAPH_WORD_LENGTH'] and not "©" in words:
                 print(f"TXT: {txt}")
                 time.sleep(1)
                 return txt + "\n"

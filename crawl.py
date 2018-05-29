@@ -6,7 +6,7 @@ def init(urls):
     laguna_map = {}
     # with Browser('firefox', headless=True) as browser:
     try:
-        browser = Browser('firefox', headless=True)
+        browser = Browser('firefox', headless=True, incognito=True, capabilities={'acceptSslCerts': True, 'javascriptEnabled': True})
         for url in urls:
             try:
                 print(f'visiting {url}')
