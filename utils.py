@@ -43,3 +43,6 @@ def link_matches_blocklist(self, link, blocklist):
     for block in blocklist:
         if fnmatch(link, block): return True
     return False
+
+def ensure_full_url(link, origin):
+    return "must implement utils.ensure_full_url"

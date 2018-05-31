@@ -29,20 +29,24 @@ class Spider:
                     print(entry.published_parsed)
                     print(entry.link)
 
-                    if not entry.link in aggregate_data[symbol]:
-                        article = Article(entry.link)
-                        article_count += 1
-                        article.download()
-                        article.parse()
-                        if ((datetime.today() - timedelta(days=ARTICLE_EXPIRATION_TIMEDELTA)).date()) <= article.publish_date.date():
-                            self.aggregate_data[symbol][entry.link] = utils.analyze_text(article.text)
-                            # print(aggregate_data)
-                        print("\n")
-                    else:
-                        print("DUPLICATE ARTICLE FOUND VIA RSS")
+                    self.process_link(entry.link)
+
+                    # if not entry.link in aggregate_data[symbol]:
+                    #     article = Article(entry.link)
+                    #     article_count += 1
+                    #     article.download()
+                    #     article.parse()
+                    #     if ((datetime.today() - timedelta(days=ARTICLE_EXPIRATION_TIMEDELTA)).date()) <= article.publish_date.date():
+                    #         self.aggregate_data[symbol][entry.link] = utils.analyze_text(article.text)
+                    #         # print(aggregate_data)
+                    #     print("\n")
+                    # else:
+                    #     print("DUPLICATE ARTICLE FOUND VIA RSS")
+
+
             except Exception as e:
                 print(e)
-                print("Moving on after failing to retrieve from src:", source)
+                print("Moving on after failing to retrieve from RSS src:", source)
                 continue
         return self.aggregate_data
 
@@ -59,20 +63,30 @@ class Spider:
                 links = link_containing_element.find_all('a')
                 print("links from ", info['url'].format(sym))
                 for a in links:
-                    if not a.get('href', None) == None and not self.link_matches_blocklist(a['href'], info['blocked_url_fragments']):
-                        print("href=", a['href'])
-                # for element in BeautifulSoup(self.browser.html, 'html.parser').findAll(text=True): #alter to find element containing relevant <a>
-                #     #find all children <a> tags,
-                #     for link in links:
-                #         self.browser.visit(link)
-                #         self.aggregate_data[info['url']] = utils.analyze_text(utils.process_page(browser.html))
+                    if not a.get('href', None) == None and not utils.link_matches_blocklist(a['href'], info['blocked_url_fragments']):
+                        # url = utils.ensure_full_url(a['href'])
+                        process_link(utils.ensure_full_url(a['href']))
+                        print("scraped href=", utils.ensure_full_url(a['href']))
             except Exception as e:
                 print(e)
-                print("Moving on after failing to retrieve from src:", source)
+                print("Moving on after failing to retrieve from crawl src:", source)
                 continue
         return self.aggregate_data
 
-    def link_matches_blocklist(self, link, blocklist):
-        for block in blocklist:
-            if fnmatch(link, block): return True
-        return False
+    def process_link(self, link):
+        if not link in aggregate_data[symbol]:
+            article = Article(entry.link)
+            article_count += 1
+            article.download()
+            article.parse()
+            if ((datetime.today() - timedelta(days=self.options.ARTICLE_EXPIRATION_TIMEDELTA)).date()) <= article.publish_date.date():
+                self.aggregate_data[symbol][link] = utils.analyze_text(article.text)
+                print("agg data modded:", aggregate_data)
+            print("\n")
+        else:
+            print("DUPLICATE ARTICLE FOUND @ url:", link)
+
+    # def link_matches_blocklist(self, link, blocklist):
+    #     for block in blocklist:
+    #         if fnmatch(link, block): return True
+    #     return False

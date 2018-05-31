@@ -12,7 +12,6 @@ options['TICKER_SYMBOLS'] = ['TGT']
 options['ARTICLE_EXPIRATION_TIMEDELTA'] = 2 #number of time units within which article is valid relative to current time
 options['MIN_PARAGRAPH_WORD_LENGTH'] = 15
 
-
 aggregate_data = {}
 
 for symbol in options['TICKER_SYMBOLS']:
@@ -48,5 +47,3 @@ for symbol in options['TICKER_SYMBOLS']:
         aggregate_data = spider.crawl_rss(symbol).crawl_direct(symbol)
     finally:
         spider.browser.quit()
-
-    aggregate_data[symbol]['article_count'] = article_count
