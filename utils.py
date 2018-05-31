@@ -3,6 +3,7 @@ from bs4.element import Comment
 import re
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
+from fnmatch import fnmatch
 
 import time
 
@@ -37,3 +38,8 @@ def alphanum(str):
     if re.compile('.*[a-z]+.*').match(str):
         return str
     return ""
+
+def link_matches_blocklist(self, link, blocklist):
+    for block in blocklist:
+        if fnmatch(link, block): return True
+    return False
