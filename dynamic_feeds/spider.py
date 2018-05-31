@@ -5,6 +5,7 @@ from dynamic_feeds.scraper_deltas import deltas
 from bs4 import BeautifulSoup
 import newspaper
 import time
+from fnmatch import fnmatch
 
 class Spider:
     def __init__(self, data, options):
@@ -21,7 +22,7 @@ class Spider:
         try:
             for source in deltas:
                 info = deltas[source]
-                print(f'\nSpider searching for articles from src: {source}\n')
+                print(f'\nSpider searching for articles from src: {source}')
                 print('going to', info['origin'].format(sym))
                 self.browser.visit(info['origin'].format(sym))
                 soup = BeautifulSoup(self.browser.html, 'html.parser')
@@ -35,7 +36,8 @@ class Spider:
                 links = link_containing_element.find_all('a')
                 print("links from ", info['origin'].format(sym))
                 for a in links:
-                    print("href=", a['href'])
+                    if not a.get('href', None) == None and not self.link_matches_blocklist(a['href'], info['blocked_url_fragments']):
+                        print("href=", a['href'])
                 # for element in BeautifulSoup(self.browser.html, 'html.parser').findAll(text=True): #alter to find element containing relevant <a>
                 #     #find all children <a> tags,
                 #     for link in links:
@@ -43,4 +45,9 @@ class Spider:
                 #         self.aggregate_data[info['origin']] = utils.analyze_text(utils.process_page(browser.html))
         finally:
             self.browser.quit()
-    return self.aggregate_data
+        return self.aggregate_data
+
+    def link_matches_blocklist(self, link, blocklist):
+        for block in blocklist:
+            if fnmatch(link, block): return True
+        return False
