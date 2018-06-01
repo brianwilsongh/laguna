@@ -1,4 +1,4 @@
-deltas = {
+scraper_deltas = {
     "seeking_alpha": {
         "url": 'https://seekingalpha.com/symbol/{0}?s={0}',
         "link_container_class": 'symbol_articles_list',
