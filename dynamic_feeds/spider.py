@@ -9,21 +9,20 @@ import feedparser
 from fnmatch import fnmatch
 from newspaper import Article
 from datetime import datetime, timedelta
+import sys, traceback
 
 class Spider:
-    def __init__(self, data, options):
+    def __init__(self, options):
         try:
             self.browser = Browser('firefox', headless=True, incognito=True, capabilities={'acceptSslCerts': True, 'javascriptEnabled': True, })
+            # self.browser = Browser('firefox')
         except Exception as e:
             print(e)
             print(f'Failed to initialize browser for Spider {self}, is something wrong with the binary?')
-        finally:
-            self.browser.quit()
-        self.aggregate_data = data
         self.options = options
         print(f'Spider {self} initialized at {datetime.now()}')
 
-    def crawl_rss(self, sym):
+    def crawl_rss(self, sym, aggregate_data):
         for source in rss_deltas:
             try:
                 rss_feed = rss_deltas[source]
@@ -31,7 +30,7 @@ class Spider:
                     print(entry.published_parsed)
                     print(entry.link)
 
-                    self.process_link(entry.link, 'links_rss')
+                    self.process_link(entry.link, 'links_rss', sym, aggregate_data)
 
                     # if not entry.link in aggregate_data[symbol]:
                     #     article = Article(entry.link)
@@ -50,9 +49,9 @@ class Spider:
                 print(e)
                 print("Moving on after failing to retrieve from RSS src:", source)
                 continue
-        return self.aggregate_data
+        return aggregate_data
 
-    def crawl_direct(self, sym):
+    def crawl_direct(self, sym, aggregate_data):
         for source in scraper_deltas:
             try:
                 info = scraper_deltas[source]
@@ -67,22 +66,26 @@ class Spider:
                 for a in links:
                     if not a.get('href', None) == None and not utils.link_matches_blocklist(a['href'], info['blocked_url_fragments']):
                         # url = utils.ensure_full_url(a['href'])
-                        process_link(utils.ensure_full_url(a['href']), 'links_scrape')
-                        print("scraped href=", utils.ensure_full_url(a['href']))
+                        self.process_link(utils.ensure_full_url(a['href'], info['url']), 'links_scrape', sym, aggregate_data)
+                        print("scraped href=", utils.ensure_full_url(a['href'], info['url']))
             except Exception as e:
                 print(e)
+                traceback.print_exc(file=sys.stdout)
                 print("Moving on after failing to retrieve from crawl src:", source)
                 continue
-        return self.aggregate_data
+        return aggregate_data
 
-    def process_link(self, link, link_type):
-        if not link in aggregate_data[symbol]:
-            article = Article(entry.link)
+    def process_link(self, link, link_type, sym, aggregate_data):
+        if not link in aggregate_data[sym]:
+            article = Article(link)
+            print("download article at link: ", link)
             article.download()
             article.parse()
-            if ((datetime.today() - timedelta(days=self.options.ARTICLE_EXPIRATION_TIMEDELTA)).date()) <= article.publish_date.date():
-                self.aggregate_data[symbol][link] = utils.analyze_text(article.text)
-                self.aggregate_data['meta_'][link_type].append(link)
+            if article.publish_date == None:
+                return
+            elif ((datetime.today() - timedelta(days=self.options['ARTICLE_EXPIRATION_TIMEDELTA'])).date()) <= article.publish_date.date():
+                aggregate_data[sym][link] = utils.analyze_text(article.text)
+                aggregate_data['meta_'][link_type].append(link)
                 print("agg data modded:", aggregate_data)
             print("\n")
         else:

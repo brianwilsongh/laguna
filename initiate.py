@@ -6,19 +6,19 @@ import utils
 import crawl
 from dynamic_feeds.spider import Spider
 
-options = {
+options = {}
+options['TICKER_SYMBOLS'] = ['TGT', 'XLE', 'WMT']
+# options['TICKER_SYMBOLS'] = ['TGT']
+options['ARTICLE_EXPIRATION_TIMEDELTA'] = 2 #number of time units within which article is valid relative to current time
+options['MIN_PARAGRAPH_WORD_LENGTH'] = 15
+
+aggregate_data = {
     'meta_': {
         'article_ct': 0,
         'links_rss': [],
         'links_scrape': [],
     }
 }
-# options['TICKER_SYMBOLS'] = ['TGT', 'XLE', 'WMT']
-options['TICKER_SYMBOLS'] = ['TGT']
-options['ARTICLE_EXPIRATION_TIMEDELTA'] = 2 #number of time units within which article is valid relative to current time
-options['MIN_PARAGRAPH_WORD_LENGTH'] = 15
-
-aggregate_data = {}
 
 for symbol in options['TICKER_SYMBOLS']:
     aggregate_data[symbol] = {}
@@ -48,9 +48,11 @@ for symbol in options['TICKER_SYMBOLS']:
     #         print("Moving to next...")
     #         continue
 
-    spider = Spider(aggregate_data, options)
+    spider = Spider(options)
     try:
-        aggregate_data = spider.crawl_rss(symbol)
-        aggregate_data = spider.crawl_direct(symbol)
+        aggregate_data = spider.crawl_rss(symbol, aggregate_data)
+        print(aggregate_data)
+        aggregate_data = spider.crawl_direct(symbol, aggregate_data)
+        print(aggregate_data)
     finally:
         spider.browser.quit()
